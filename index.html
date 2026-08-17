@@ -277,4 +277,37 @@ function afterDraw(){
 var _draw=draw;
 draw=function(){_draw();afterDraw()};
 draw();
+
+function snap(){return {view:view,lg:lg,fx:fx,mk:mk,side:side,sel:sel,line:line,scope:scope}}
+function hashFor(){
+ if(view==="home")return "#";
+ if(view==="league")return "#l="+encodeURIComponent(lg);
+ if(view==="match")return "#m="+fx;
+ return "#m="+fx+"&k="+mk;
+}
+function fromHash(){
+ var h=location.hash.replace(/^#/,"");
+ if(!h)return false;
+ var q={};
+ h.split("&").forEach(function(p){var kv=p.split("=");q[kv[0]]=decodeURIComponent(kv[1]||"")});
+ if(q.l){view="league";lg=q.l;return true}
+ if(q.m&&q.k){view="market";fx=q.m;mk=q.k;line=(LBL[q.k]||["",0.5])[1];side=0;sel="";scope="all";return true}
+ if(q.m){view="match";fx=q.m;return true}
+ return false;
+}
+
+var _go2=go;
+go=function(v,x){_go2(v,x);
+ try{history.pushState(snap(),"",hashFor())}catch(e){}};
+
+window.addEventListener("popstate",function(e){
+ if(e.state){view=e.state.view;lg=e.state.lg;fx=e.state.fx;mk=e.state.mk;
+  side=e.state.side;sel=e.state.sel;line=e.state.line;scope=e.state.scope}
+ else if(!fromHash()){view="home"}
+ var ov=document.getElementById("slipov"); if(ov)ov.remove();
+ draw();
+});
+
+if(fromHash())draw();
+try{history.replaceState(snap(),"",hashFor())}catch(e){}
 </script></body></html>
